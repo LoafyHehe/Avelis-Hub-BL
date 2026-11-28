@@ -27,33 +27,36 @@ jobs:
       - name: Extract GameReferences.zip from repository
         run: |
           mkdir -p GameReferences/MelonLoader/net8 GameReferences/MelonLoader/Il2CppAssemblies GameReferences/Unity GameReferences/Mods
-          for archive in GameReferences.zip *Reference*.zip *reference*.zip; do
-            if [ -f "$archive" ]; then
-              echo "Extracting $archive..."
-              mkdir -p /tmp/gamerefs
-              unzip -o -q "$archive" -d /tmp/gamerefs
-              for dll in MelonLoader.dll 0Harmony.dll Il2CppInterop.Runtime.dll; do
-                found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
-                [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/net8/
-              done
-              found=$(find /tmp/gamerefs -name "Il2Cppmscorlib.dll" -type f | head -n1)
-              [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/Il2CppAssemblies/
-              for dll in UnityEngine.CoreModule.dll UnityEngine.PhysicsModule.dll UnityEngine.TextRenderingModule.dll; do
-                found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
-                [ -n "$found" ] && cp "$found" GameReferences/Unity/
-              done
-              found=$(find /tmp/gamerefs -name "BoneLib.dll" -type f | head -n1)
-              [ -n "$found" ] && cp "$found" GameReferences/Mods/
-              rm -rf /tmp/gamerefs
-            fi
-          done
+          if [ -f "GameReferences.zip" ]; then
+            echo "Extracting GameReferences.zip..."
+            mkdir -p /tmp/gamerefs
+            unzip -o -q GameReferences.zip -d /tmp/gamerefs
+            for dll in MelonLoader.dll 0Harmony.dll Il2CppInterop.Runtime.dll; do
+              found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
+              [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/net8/
+            done
+            found=$(find /tmp/gamerefs -name "Il2Cppmscorlib.dll" -type f | head -n1)
+            [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/Il2CppAssemblies/
+            for dll in UnityEngine.CoreModule.dll UnityEngine.PhysicsModule.dll UnityEngine.TextRenderingModule.dll; do
+              found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
+              [ -n "$found" ] && cp "$found" GameReferences/Unity/
+            done
+            found=$(find /tmp/gamerefs -name "BoneLib.dll" -type f | head -n1)
+            [ -n "$found" ] && cp "$found" GameReferences/Mods/
+            rm -rf /tmp/gamerefs
+          fi
 
-      - name: Fetch LemonLoader 0.6.5.1 and BoneLib 3.2.2 if missing
+      - name: Fetch missing LemonLoader 0.6.5.1 or BoneLib 3.2.2 assemblies
         run: |
-          if [ ! -f "GameReferences/MelonLoader/net8/MelonLoader.dll" ]; then
+          if [ ! -f "GameReferences/MelonLoader/net8/MelonLoader.dll" ] || [ ! -f "GameReferences/MelonLoader/net8/0Harmony.dll" ] || [ ! -f "GameReferences/MelonLoader/net8/Il2CppInterop.Runtime.dll" ]; then
             curl -fsSL -L "https://github.com/LemonLoader/MelonLoader/releases/download/0.6.5.1/melon_data.zip" -o /tmp/melon_data.zip
             unzip -o -q /tmp/melon_data.zip -d /tmp/melon_data
-            find /tmp/melon_data -type f \( -name "MelonLoader.dll" -o -name "0Harmony.dll" -o -name "Il2CppInterop.Runtime.dll" \) -exec cp {} GameReferences/MelonLoader/net8/ \;
+            for dll in MelonLoader.dll 0Harmony.dll Il2CppInterop.Runtime.dll; do
+              if [ ! -f "GameReferences/MelonLoader/net8/$dll" ]; then
+                found=$(find /tmp/melon_data -name "$dll" -type f | head -n1)
+                [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/net8/
+              fi
+            done
             rm -rf /tmp/melon_data /tmp/melon_data.zip
           fi
           if [ ! -f "GameReferences/Mods/BoneLib.dll" ]; then
