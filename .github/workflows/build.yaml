@@ -37,7 +37,7 @@ jobs:
             done
             found=$(find /tmp/gamerefs -name "Il2Cppmscorlib.dll" -type f | head -n1)
             [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/Il2CppAssemblies/
-            for dll in UnityEngine.CoreModule.dll UnityEngine.PhysicsModule.dll UnityEngine.TextRenderingModule.dll; do
+            for dll in UnityEngine.CoreModule.dll UnityEngine.PhysicsModule.dll UnityEngine.TextRenderingModule.dll UnityEngine.AudioModule.dll; do
               found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
               [ -n "$found" ] && cp "$found" GameReferences/Unity/
             done
@@ -76,6 +76,7 @@ jobs:
             "GameReferences/Unity/UnityEngine.CoreModule.dll"
             "GameReferences/Unity/UnityEngine.PhysicsModule.dll"
             "GameReferences/Unity/UnityEngine.TextRenderingModule.dll"
+            "GameReferences/Unity/UnityEngine.AudioModule.dll"
             "GameReferences/Mods/BoneLib.dll"
           )
           missing=0
