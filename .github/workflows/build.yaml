@@ -29,19 +29,39 @@ jobs:
           GAME_REFERENCES_ZIP_B64: ${{ secrets.GAME_REFERENCES_ZIP_B64 }}
         run: |
           if [ -n "$GAME_REFERENCES_ZIP_B64" ]; then
-            echo "$GAME_REFERENCES_ZIP_B64" | base64 -d > GameReferences.zip
-            unzip -o -q GameReferences.zip -d .
+            echo "$GAME_REFERENCES_ZIP_B64" | tr -d '\r\n' | base64 -d > GameReferences.zip
+            unzip -o -q GameReferences.zip -d /tmp/gamerefs
             rm -f GameReferences.zip
+            mkdir -p GameReferences/MelonLoader/net8 GameReferences/MelonLoader/Il2CppAssemblies GameReferences/Unity GameReferences/Mods
+            for dll in MelonLoader.dll 0Harmony.dll Il2CppInterop.Runtime.dll; do
+              found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
+              [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/net8/
+            done
+            found=$(find /tmp/gamerefs -name "Il2Cppmscorlib.dll" -type f | head -n1)
+            [ -n "$found" ] && cp "$found" GameReferences/MelonLoader/Il2CppAssemblies/
+            for dll in UnityEngine.CoreModule.dll UnityEngine.PhysicsModule.dll UnityEngine.TextRenderingModule.dll; do
+              found=$(find /tmp/gamerefs -name "$dll" -type f | head -n1)
+              [ -n "$found" ] && cp "$found" GameReferences/Unity/
+            done
+            found=$(find /tmp/gamerefs -name "BoneLib.dll" -type f | head -n1)
+            [ -n "$found" ] && cp "$found" GameReferences/Mods/
+            rm -rf /tmp/gamerefs
           fi
 
-      - name: Fetch LemonLoader 0.6.5.1 net8 assemblies if missing
+      - name: Fetch LemonLoader 0.6.5.1 and BoneLib 3.2.2 if missing
         run: |
-          mkdir -p GameReferences/MelonLoader/net8
+          mkdir -p GameReferences/MelonLoader/net8 GameReferences/Mods
           if [ ! -f "GameReferences/MelonLoader/net8/MelonLoader.dll" ]; then
             curl -fsSL -L "https://github.com/LemonLoader/MelonLoader/releases/download/0.6.5.1/melon_data.zip" -o /tmp/melon_data.zip
             unzip -o -q /tmp/melon_data.zip -d /tmp/melon_data
             find /tmp/melon_data -type f \( -name "MelonLoader.dll" -o -name "0Harmony.dll" -o -name "Il2CppInterop.Runtime.dll" \) -exec cp {} GameReferences/MelonLoader/net8/ \;
             rm -rf /tmp/melon_data /tmp/melon_data.zip
+          fi
+          if [ ! -f "GameReferences/Mods/BoneLib.dll" ]; then
+            curl -fsSL -L "https://thunderstore.io/package/download/bonelib/BoneLib/3.2.2/" -o /tmp/bonelib.zip
+            unzip -o -q /tmp/bonelib.zip -d /tmp/bonelib
+            cp /tmp/bonelib/Mods/BoneLib.dll GameReferences/Mods/BoneLib.dll
+            rm -rf /tmp/bonelib /tmp/bonelib.zip
           fi
 
       - name: Verify required GameReferences
@@ -64,7 +84,7 @@ jobs:
             fi
           done
           if [ "$missing" -ne 0 ]; then
-            echo "Add your Quest GameReferences/ folder or set the GAME_REFERENCES_ZIP_B64 repository secret."
+            echo "Copy the 4 Quest BONELAB Il2CppAssemblies/Unity DLLs into GameReferences/ or base64-encode a zip of them into the GAME_REFERENCES_ZIP_B64 secret."
             exit 1
           fi
 
