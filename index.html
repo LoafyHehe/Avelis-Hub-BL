@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Avelis Hub BL brings single-player tools to BONELAB on standalone Meta Quest through Bone Menu and an Apple-inspired dark obsidian glass VR panel with Right Trigger selection.">
+  <meta name="description" content="Avelis Hub BL brings Solo and LabFusion tools to BONELAB on standalone Meta Quest through Bone Menu and a dark obsidian glass VR panel with Right Trigger selection.">
   <meta property="og:site_name" content="Avelis Hub BL">
   <meta property="og:title" content="Avelis Hub BL">
-  <meta property="og:description" content="A Quest BONELAB mod with Bone Menu integration and a dark obsidian spatial glass VR tools panel.">
+  <meta property="og:description" content="A Quest BONELAB mod with full LabFusion support, mass spawning, Bone Menu integration, and a dark obsidian spatial glass VR panel.">
   <title>Avelis Hub BL</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -650,7 +650,7 @@
       text-align: center;
     }
 
-    /* Simulated VR Pointer Reticle */
+    /* Simulated VR Pointer Reticle + Haptic Ripple */
     .vr-reticle {
       position: absolute;
       width: 14px;
@@ -661,11 +661,40 @@
       pointer-events: none;
       transform: translate(-50%, -50%) scale(1);
       opacity: 0;
-      transition: opacity 150ms ease, transform 120ms var(--ease-apple);
+      transition: opacity 150ms ease, transform 120ms var(--ease-apple), box-shadow 150ms ease;
       z-index: 30;
     }
     .vr-reticle.is-active { opacity: 1; }
+    .vr-reticle.is-interactive-hover {
+      box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.28), 0 0 22px rgba(255, 255, 255, 0.6);
+    }
     .vr-reticle.is-trigger { transform: translate(-50%, -50%) scale(0.72); }
+    .vr-reticle-ripple {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .vr-reticle-ripple.is-hover-ripple {
+      animation: hapticHover 300ms var(--ease-apple) forwards;
+    }
+    .vr-reticle-ripple.is-click-ripple {
+      border-width: 2px;
+      border-color: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.42);
+      animation: hapticClick 380ms var(--ease-apple) forwards;
+    }
+    @keyframes hapticHover {
+      0% { transform: scale(0.95); opacity: 0.58; }
+      100% { transform: scale(2.8); opacity: 0; }
+    }
+    @keyframes hapticClick {
+      0% { transform: scale(0.8); opacity: 0.9; }
+      45% { opacity: 0.55; }
+      100% { transform: scale(3.6); opacity: 0; }
+    }
 
     /* Content Sections */
     .section {
@@ -833,7 +862,7 @@
         <a href="#install">Install</a>
         <a href="#source">Source</a>
       </nav>
-      <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.4" download="AvelisHubBL-source.zip">Download Source</a>
+      <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.5" download="AvelisHubBL-source.zip">Download Source</a>
     </div>
   </header>
 
@@ -846,13 +875,13 @@
             <span aria-hidden="true">·</span>
             <span>Meta Quest</span>
             <span aria-hidden="true">·</span>
-            <span>Single Player</span>
+            <span>Solo &amp; LabFusion</span>
             <span aria-hidden="true">·</span>
-            <span>v0.2.4</span>
+            <span>v0.2.5</span>
           </div>
           <h1>Obsidian spatial glass, built for Quest controllers.</h1>
           <p>
-            Avelis Hub BL pairs Bone Menu integration with a detached dark obsidian glass VR panel. Aim with your right hand and pull the <strong>Right Trigger</strong> to select—leaving <strong>A</strong> dedicated to jumping.
+            Avelis Hub BL pairs Bone Menu integration with a dark obsidian glass VR panel, full LabFusion multiplayer spawning and player tools, and mass spawn bursts. Point with your right hand and pull <strong>Right Trigger</strong> to select—leaving <strong>A</strong> dedicated to jumping.
           </p>
         </div>
         <div class="hero-actions">
@@ -871,7 +900,9 @@
           <span class="vr-version" id="pointer-readout">Pointer active</span>
         </div>
 
-        <div class="vr-reticle" id="vr-reticle" aria-hidden="true"></div>
+        <div class="vr-reticle" id="vr-reticle" aria-hidden="true">
+          <span class="vr-reticle-ripple" id="vr-reticle-ripple"></span>
+        </div>
 
         <div class="vr-closed-notice" id="vr-closed-notice">
           <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600;">VR Panel Closed</div>
@@ -893,7 +924,7 @@
                 <h2 class="vr-heading" id="panel-heading">Player</h2>
                 <p class="vr-caption" id="panel-caption">Health, locomotion and local rig overrides</p>
               </div>
-              <div class="vr-version">Quest · 0.2.4</div>
+              <div class="vr-version">Quest · 0.2.5</div>
             </div>
 
             <div class="vr-rows" id="panel-rows"></div>
@@ -936,7 +967,7 @@
         <article class="obsidian-card">
           <div class="card-meta">Right Controller · A Button</div>
           <h3>Dedicated to jump</h3>
-          <p>Right A is no longer intercepted by the VR panel, keeping jumping and jump-multiplier boosts natural even while the overlay is visible.</p>
+          <p>The A button stays dedicated to jumping, keeping movement and jump-multiplier boosts natural even while the spatial overlay is visible.</p>
         </article>
       </div>
     </section>
@@ -945,7 +976,7 @@
       <div class="section-head">
         <div class="section-kicker">Standalone Meta Quest</div>
         <h2>Install on BONELAB</h2>
-        <p>Avelis Hub BL runs inside BONELAB with LemonLoader and BoneLib. Nothing runs outside the game at play time, and Fusion sessions automatically pause gameplay overrides.</p>
+        <p>Avelis Hub BL runs inside BONELAB with LemonLoader and BoneLib in both Solo and LabFusion lobbies, routing networked spawns automatically through LabFusion when connected.</p>
       </div>
       <ol class="steps">
         <li>
@@ -966,7 +997,7 @@
         <li>
           <span class="step-num">04. Launch &amp; Control</span>
           <strong>Summon with X + Y or Bone Menu</strong>
-          <p>Enter a single-player scene, press X + Y on your left controller, point with your right hand, and pull Right Trigger to select.</p>
+          <p>Enter any solo or LabFusion scene, press X + Y on your left controller, point with your right hand, and pull Right Trigger to select.</p>
         </li>
       </ol>
     </section>
@@ -974,15 +1005,15 @@
     <section class="section" id="source">
       <div class="section-head">
         <div class="section-kicker">Source &amp; Release Artifacts</div>
-        <h2>Build the updated Quest DLL locally</h2>
-        <p><code>AvelisHubBL-source.zip</code> includes the Apple dark obsidian glass <code>VrPanel.cs</code> redesign and Right Trigger input binding. Recompile into a Quest DLL using your local <code>GameReferences/</code> assemblies.</p>
+        <h2>Build the updated Quest DLL</h2>
+        <p><code>AvelisHubBL-source.zip</code> includes the v0.2.5 VR panel render-queue and typography fixes, Right Trigger selection, mass spawn modes, and full LabFusion multiplayer support.</p>
       </div>
       <div class="grid-2">
         <div class="obsidian-card">
           <h3>Release Downloads</h3>
           <p>Download the updated C# source archive, inspect checksums, or grab the prior 0.2.2 precompiled DLL.</p>
           <div class="download-strip">
-            <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.4" download="AvelisHubBL-source.zip">Updated Source (.zip)</a>
+            <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.5" download="AvelisHubBL-source.zip">Updated Source (.zip)</a>
             <a class="btn-ghost" href="/AvelisHubBL.dll" download>Prebuilt DLL (0.2.2)</a>
             <a class="btn-ghost" href="/README.txt">Install Guide</a>
           </div>
@@ -1000,7 +1031,7 @@
 
     <footer>
       <div class="footer-inner">
-        <span>Avelis Hub BL · MIT License · Quest Single-Player Mod</span>
+        <span>Avelis Hub BL · MIT License · Quest Solo &amp; LabFusion Mod</span>
         <div class="footer-links">
           <a href="/README.txt">README.txt</a>
           <a href="/SHA256SUMS.txt">SHA256SUMS.txt</a>
@@ -1053,9 +1084,27 @@
       crateIndex: 0,
       tracked: ['Ford (NPC) #1'],
       trackedIndex: 0,
+      fusionActive: true,
+      fusionPlayers: ['KairoVR', 'NovaQuest'],
+      fusionPlayerIndex: 0,
       status: 'X + Y to close · Right Trigger to select',
       settings: { ...DEFAULTS }
     };
+
+    function fusionStatusLabel() {
+      return state.fusionActive
+        ? `Fusion Host · ${state.fusionPlayers.length} remote player(s)`
+        : 'Solo (click to simulate Fusion)';
+    }
+
+    function selectedFusionPlayer() {
+      if (!state.fusionActive) return 'Not in Fusion';
+      return `${state.fusionPlayerIndex + 1}/${state.fusionPlayers.length} · ${state.fusionPlayers[state.fusionPlayerIndex]}`;
+    }
+
+    function spawnVerb(count) {
+      return state.fusionActive ? `Fusion spawned ${count} ×` : `Requested ${count} ×`;
+    }
 
     function filteredCrates() {
       const cat = state.categories[state.categoryIndex];
@@ -1114,7 +1163,7 @@
       },
       {
         id: 'spawning', title: 'Spawning', icon: ICONS.spawning,
-        caption: 'Browse real crates from the active Asset Warehouse',
+        caption: 'Solo & Fusion asset spawning and mass bursts',
         rows: [
           {
             type: 'action', title: 'Next crate category',
@@ -1154,11 +1203,40 @@
               if (label === 'No matching crates') return label;
               state.tracked.push(`${label} #${state.tracked.length + 1}`);
               state.trackedIndex = state.tracked.length - 1;
-              return `Spawned ${state.settings.spawnCount}x ${label}.`;
+              return `${spawnVerb(state.settings.spawnCount)} ${label}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Mass spawn (10×)',
+            detail: selectedCrateLabel,
+            run: () => {
+              const label = selectedCrateLabel();
+              if (label === 'No matching crates') return label;
+              state.tracked.push(`${label} (10× Burst)`);
+              state.trackedIndex = state.tracked.length - 1;
+              return `${spawnVerb(10)} ${label}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Spawn ring (12×)',
+            detail: selectedCrateLabel,
+            run: () => {
+              const label = selectedCrateLabel();
+              if (label === 'No matching crates') return label;
+              return `${spawnVerb(12)} ${label} in 360° ring.`;
+            }
+          },
+          {
+            type: 'action', title: 'Rain from above (10×)',
+            detail: selectedCrateLabel,
+            run: () => {
+              const label = selectedCrateLabel();
+              if (label === 'No matching crates') return label;
+              return `${spawnVerb(10)} ${label} from above.`;
             }
           },
           { type: 'slider', key: 'spawnDistance', title: 'Distance (m)', min: 1, max: 10, step: 0.5 },
-          { type: 'slider', key: 'spawnCount', title: 'Quantity', min: 1, max: 5, step: 1 },
+          { type: 'slider', key: 'spawnCount', title: 'Quantity', min: 1, max: 20, step: 1 },
           { type: 'slider', key: 'spawnYaw', title: 'Yaw (degrees)', min: -180, max: 180, step: 15 },
           { type: 'toggle', key: 'spawnFloor', title: 'Place on surface' },
           {
@@ -1214,7 +1292,7 @@
       },
       {
         id: 'world', title: 'World', icon: ICONS.world,
-        caption: 'Reversible scene and tracked prop controls',
+        caption: 'Reversible scene, prop physics and NPC controls',
         rows: [
           { type: 'slider', key: 'gravity', title: 'Gravity multiplier', min: 0.25, max: 2, step: 0.25 },
           { type: 'slider', key: 'timeScale', title: 'Time scale', min: 0.25, max: 1.5, step: 0.25 },
@@ -1225,6 +1303,9 @@
           { type: 'action', title: 'Apply scale and rotation', run: () => `Updated ${selectedTrackedLabel()}.` },
           { type: 'action', title: 'Move selected to aim', run: () => `Moved ${selectedTrackedLabel()} to aim.` },
           { type: 'action', title: 'Restore selected transform', run: () => `Restored ${selectedTrackedLabel()} transform.` },
+          { type: 'action', title: 'Launch aimed/selected prop', run: () => `Launched ${selectedTrackedLabel()} forward.` },
+          { type: 'action', title: 'Bring props to aim', run: () => 'Brought props to aim.' },
+          { type: 'action', title: 'Scatter nearby props', run: () => 'Scattered nearby props.' },
           { type: 'action', title: 'Freeze tracked NPCs', run: () => 'Tracked NPCs frozen.' },
           { type: 'action', title: 'Unfreeze tracked NPCs', run: () => 'Tracked NPCs unfrozen.' },
           {
@@ -1255,7 +1336,7 @@
             run: () => {
               const label = selectedCrateLabel();
               state.tracked.push(`${label} #${state.tracked.length + 1}`);
-              return `Spawned ${label}.`;
+              return `${spawnVerb(1)} ${label}.`;
             }
           },
           { type: 'action', title: 'Freeze selected', run: () => `Froze ${selectedTrackedLabel()}.` },
@@ -1265,8 +1346,35 @@
       },
       {
         id: 'utilities', title: 'Utilities', icon: ICONS.utilities,
-        caption: 'Cleanup, recovery and compatibility information',
+        caption: 'Fusion multiplayer tools, cleanup and help',
         rows: [
+          {
+            type: 'action', title: 'Fusion status', detail: fusionStatusLabel,
+            run: () => {
+              state.fusionActive = !state.fusionActive;
+              return fusionStatusLabel();
+            }
+          },
+          {
+            type: 'action', title: 'Cycle Fusion player', detail: selectedFusionPlayer,
+            run: () => {
+              if (!state.fusionActive) return 'Join a Fusion session first.';
+              state.fusionPlayerIndex = (state.fusionPlayerIndex + 1) % state.fusionPlayers.length;
+              return `Target: ${state.fusionPlayers[state.fusionPlayerIndex]}`;
+            }
+          },
+          {
+            type: 'action', title: 'Teleport to Fusion player', detail: selectedFusionPlayer,
+            run: () => state.fusionActive ? `Teleported to ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Spawn on Fusion player', detail: selectedCrateLabel,
+            run: () => state.fusionActive ? `Fusion spawned 1 × ${selectedCrateLabel()} on ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Mass spawn on player (8×)', detail: selectedCrateLabel,
+            run: () => state.fusionActive ? `Fusion spawned 8 × ${selectedCrateLabel()} around ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
           { type: 'action', title: 'Clear tracked spawns', run: () => { state.tracked = []; return 'Tracked spawns cleared.'; } },
           {
             type: 'action', title: 'Reset player overrides',
@@ -1283,7 +1391,7 @@
               return 'World overrides restored.';
             }
           },
-          { type: 'action', title: 'About Avelis Hub BL', run: () => 'Avelis Hub BL 0.2.4 · Quest / LemonLoader 0.6.5.1 · BoneLib' },
+          { type: 'action', title: 'About Avelis Hub BL', run: () => 'Avelis Hub BL 0.2.5 · Quest / LemonLoader 0.6.5.1 · BoneLib' },
           { type: 'action', title: 'Controller help', run: () => 'Left X + Y opens/closes. Aim with right hand, pull Right Trigger to select. A jumps.' }
         ]
       },
@@ -1350,7 +1458,16 @@
     const closedNoticeEl = document.getElementById('vr-closed-notice');
     const stageEl = document.getElementById('spatial-stage');
     const reticleEl = document.getElementById('vr-reticle');
+    const reticleRippleEl = document.getElementById('vr-reticle-ripple');
     const pointerReadout = document.getElementById('pointer-readout');
+    let lastHoverTarget = null;
+
+    function triggerReticleRipple(kind) {
+      if (!reticleRippleEl) return;
+      reticleRippleEl.classList.remove('is-hover-ripple', 'is-click-ripple');
+      void reticleRippleEl.offsetWidth;
+      reticleRippleEl.classList.add(kind === 'click' ? 'is-click-ripple' : 'is-hover-ripple');
+    }
 
     function formatVal(val) {
       return Number.isInteger(val) ? String(val) : String(Number(val.toFixed(2)));
@@ -1575,12 +1692,22 @@
       reticleEl.style.left = `${e.clientX - rect.left}px`;
       reticleEl.style.top = `${e.clientY - rect.top}px`;
       reticleEl.classList.add('is-active');
+
+      const interactive = e.target.closest('button:not(:disabled), .vr-row.is-interactive, .nav-item, .kb-key, .page-btn:not(:disabled), .step-btn, .range-track');
+      reticleEl.classList.toggle('is-interactive-hover', Boolean(interactive));
+      if (interactive && interactive !== lastHoverTarget) {
+        triggerReticleRipple('hover');
+      }
+      lastHoverTarget = interactive;
     });
     stageEl.addEventListener('mouseleave', () => {
-      reticleEl.classList.remove('is-active');
+      reticleEl.classList.remove('is-active', 'is-interactive-hover');
+      lastHoverTarget = null;
     });
-    stageEl.addEventListener('mousedown', () => {
+    stageEl.addEventListener('mousedown', (e) => {
       reticleEl.classList.add('is-trigger');
+      const interactive = e.target.closest('button:not(:disabled), .vr-row.is-interactive, .nav-item, .kb-key, .page-btn:not(:disabled), .step-btn, .range-track');
+      if (interactive) triggerReticleRipple('click');
       pointerReadout.textContent = 'Right Trigger pressed';
     });
     window.addEventListener('mouseup', () => {
