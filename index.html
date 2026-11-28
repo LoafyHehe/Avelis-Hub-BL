@@ -862,7 +862,7 @@
         <a href="#install">Install</a>
         <a href="#source">Source</a>
       </nav>
-      <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.6" download="AvelisHubBL-source.zip">Download Source</a>
+      <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.3.0" download="AvelisHubBL-source.zip">Download Source</a>
     </div>
   </header>
 
@@ -877,7 +877,7 @@
             <span aria-hidden="true">·</span>
             <span>Solo &amp; LabFusion</span>
             <span aria-hidden="true">·</span>
-            <span>v0.2.6</span>
+            <span>v0.3.0</span>
           </div>
           <h1>Obsidian spatial glass, built for Quest controllers.</h1>
           <p>
@@ -924,7 +924,7 @@
                 <h2 class="vr-heading" id="panel-heading">Player</h2>
                 <p class="vr-caption" id="panel-caption">Health, locomotion and local rig overrides</p>
               </div>
-              <div class="vr-version">Quest · 0.2.6</div>
+              <div class="vr-version">Quest · 0.3.0</div>
             </div>
 
             <div class="vr-rows" id="panel-rows"></div>
@@ -1006,14 +1006,14 @@
       <div class="section-head">
         <div class="section-kicker">Source &amp; Release Artifacts</div>
         <h2>Build the updated Quest DLL</h2>
-        <p><code>AvelisHubBL-source.zip</code> includes the v0.2.6 VR panel render-queue and typography fixes, Right Trigger selection, mass spawn modes, and full LabFusion multiplayer support.</p>
+        <p><code>AvelisHubBL-source.zip</code> includes the v0.3.0 SpawnLab-style mod/barcode catalog search &amp; networked Fusion spawning/despawning, FusionGuard-inspired host/admin utilities, and Quest VR panel fixes.</p>
       </div>
       <div class="grid-2">
         <div class="obsidian-card">
           <h3>Release Downloads</h3>
           <p>Download the updated C# source archive, inspect checksums, or grab the prior 0.2.2 precompiled DLL.</p>
           <div class="download-strip">
-            <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.6" download="AvelisHubBL-source.zip">Updated Source (.zip)</a>
+            <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.3.0" download="AvelisHubBL-source.zip">Updated Source (.zip)</a>
             <a class="btn-ghost" href="/AvelisHubBL.dll" download>Prebuilt DLL (0.2.2)</a>
             <a class="btn-ghost" href="/README.txt">Install Guide</a>
           </div>
@@ -1227,6 +1227,15 @@
             }
           },
           {
+            type: 'action', title: 'Spawn wall (3×3)',
+            detail: selectedCrateLabel,
+            run: () => {
+              const label = selectedCrateLabel();
+              if (label === 'No matching crates') return label;
+              return `${spawnVerb(9)} ${label} wall.`;
+            }
+          },
+          {
             type: 'action', title: 'Rain from above (10×)',
             detail: selectedCrateLabel,
             run: () => {
@@ -1257,6 +1266,15 @@
             }
           },
           {
+            type: 'action', title: 'Undo last spawn',
+            run: () => {
+              if (!state.tracked.length) return 'No tracked spawns to undo.';
+              const removed = state.tracked.pop();
+              state.trackedIndex = Math.max(0, Math.min(state.trackedIndex, state.tracked.length - 1));
+              return `Removed last spawn (${removed}).`;
+            }
+          },
+          {
             type: 'action', title: 'Remove selected',
             run: () => {
               if (!state.tracked.length) return 'No tracked objects.';
@@ -1264,6 +1282,10 @@
               state.trackedIndex = Math.max(0, Math.min(state.trackedIndex, state.tracked.length - 1));
               return `Removed ${removed}.`;
             }
+          },
+          {
+            type: 'action', title: 'Despawn my Fusion spawns',
+            run: () => state.fusionActive ? 'Fusion despawned your spawned items.' : 'Join a Fusion session first.'
           },
           {
             type: 'action', title: 'Clear tracked spawns',
@@ -1346,7 +1368,7 @@
       },
       {
         id: 'utilities', title: 'Utilities', icon: ICONS.utilities,
-        caption: 'Fusion multiplayer tools, cleanup and help',
+        caption: 'Fusion multiplayer, admin & SpawnLab tools',
         rows: [
           {
             type: 'action', title: 'Fusion status', detail: fusionStatusLabel,
@@ -1364,8 +1386,20 @@
             }
           },
           {
+            type: 'action', title: 'Inspect Fusion player', detail: selectedFusionPlayer,
+            run: () => state.fusionActive ? `${state.fusionPlayers[state.fusionPlayerIndex]} (Player) · Ford · 6.4m away` : 'Join a Fusion session first.'
+          },
+          {
             type: 'action', title: 'Teleport to Fusion player', detail: selectedFusionPlayer,
             run: () => state.fusionActive ? `Teleported to ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Bring Fusion player here', detail: selectedFusionPlayer,
+            run: () => state.fusionActive ? `Teleported ${state.fusionPlayers[state.fusionPlayerIndex]} to you.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Gather all Fusion players',
+            run: () => state.fusionActive ? `Gathered ${state.fusionPlayers.length} Fusion player(s) around you.` : 'Join a Fusion session first.'
           },
           {
             type: 'action', title: 'Spawn on Fusion player', detail: selectedCrateLabel,
@@ -1374,6 +1408,34 @@
           {
             type: 'action', title: 'Mass spawn on player (8×)', detail: selectedCrateLabel,
             run: () => state.fusionActive ? `Fusion spawned 8 × ${selectedCrateLabel()} around ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Spawn ring on player (8×)', detail: selectedCrateLabel,
+            run: () => state.fusionActive ? `Fusion spawned 8 × ${selectedCrateLabel()} ring around ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Mute / unmute player', detail: selectedFusionPlayer,
+            run: () => state.fusionActive ? `Toggled mute for ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Fusion SlowMo pulse',
+            run: () => state.fusionActive ? 'Sent Fusion SlowMo pulse.' : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Despawn my Fusion spawns',
+            run: () => state.fusionActive ? 'Fusion despawned your spawned items.' : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Despawn all Fusion props',
+            run: () => state.fusionActive ? 'Despawned all networked Fusion props.' : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Kick Fusion player', detail: selectedFusionPlayer,
+            run: () => state.fusionActive ? `Kicked ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
+          },
+          {
+            type: 'action', title: 'Ban Fusion player', detail: selectedFusionPlayer,
+            run: () => state.fusionActive ? `Banned ${state.fusionPlayers[state.fusionPlayerIndex]}.` : 'Join a Fusion session first.'
           },
           { type: 'action', title: 'Clear tracked spawns', run: () => { state.tracked = []; return 'Tracked spawns cleared.'; } },
           {
@@ -1391,7 +1453,7 @@
               return 'World overrides restored.';
             }
           },
-          { type: 'action', title: 'About Avelis Hub BL', run: () => 'Avelis Hub BL 0.2.6 · Quest / LemonLoader 0.6.5.1 · BoneLib' },
+          { type: 'action', title: 'About Avelis Hub BL', run: () => 'Avelis Hub BL 0.3.0 · Quest / LemonLoader 0.6.5.1 · BoneLib' },
           { type: 'action', title: 'Controller help', run: () => 'Left X + Y opens/closes. Aim with right hand, pull Right Trigger to select. A jumps.' }
         ]
       },
