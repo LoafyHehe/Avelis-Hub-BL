@@ -18,7 +18,7 @@ const BLOCKED_PATHS = new Set([
 ]);
 
 app.use((req, res, next) => {
-  if (BLOCKED_PATHS.has(req.path) || req.path.startsWith('/node_modules')) {
+  if (BLOCKED_PATHS.has(req.path) || req.path.startsWith('/node_modules') || req.path.startsWith('/.github')) {
     return res.status(404).send('Not found');
   }
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

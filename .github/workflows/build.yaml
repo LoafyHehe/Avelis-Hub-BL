@@ -1,0 +1,87 @@
+name: Build AvelisHubBL DLL
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Unpack source if using archive layout
+        run: |
+          if [ ! -f "AvelisHubBL/AvelisHubBL.csproj" ] && [ -f "AvelisHubBL-source.zip" ]; then
+            unzip -o -q AvelisHubBL-source.zip -d .
+          fi
+
+      - name: Restore GameReferences from secret (if configured)
+        env:
+          GAME_REFERENCES_ZIP_B64: ${{ secrets.GAME_REFERENCES_ZIP_B64 }}
+        run: |
+          if [ -n "$GAME_REFERENCES_ZIP_B64" ]; then
+            echo "$GAME_REFERENCES_ZIP_B64" | base64 -d > GameReferences.zip
+            unzip -o -q GameReferences.zip -d .
+            rm -f GameReferences.zip
+          fi
+
+      - name: Fetch LemonLoader 0.6.5.1 net8 assemblies if missing
+        run: |
+          mkdir -p GameReferences/MelonLoader/net8
+          if [ ! -f "GameReferences/MelonLoader/net8/MelonLoader.dll" ]; then
+            curl -fsSL -L "https://github.com/LemonLoader/MelonLoader/releases/download/0.6.5.1/melon_data.zip" -o /tmp/melon_data.zip
+            unzip -o -q /tmp/melon_data.zip -d /tmp/melon_data
+            find /tmp/melon_data -type f \( -name "MelonLoader.dll" -o -name "0Harmony.dll" -o -name "Il2CppInterop.Runtime.dll" \) -exec cp {} GameReferences/MelonLoader/net8/ \;
+            rm -rf /tmp/melon_data /tmp/melon_data.zip
+          fi
+
+      - name: Verify required GameReferences
+        run: |
+          required=(
+            "GameReferences/MelonLoader/net8/MelonLoader.dll"
+            "GameReferences/MelonLoader/net8/0Harmony.dll"
+            "GameReferences/MelonLoader/net8/Il2CppInterop.Runtime.dll"
+            "GameReferences/MelonLoader/Il2CppAssemblies/Il2Cppmscorlib.dll"
+            "GameReferences/Unity/UnityEngine.CoreModule.dll"
+            "GameReferences/Unity/UnityEngine.PhysicsModule.dll"
+            "GameReferences/Unity/UnityEngine.TextRenderingModule.dll"
+            "GameReferences/Mods/BoneLib.dll"
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "Missing: $f"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Add your Quest GameReferences/ folder or set the GAME_REFERENCES_ZIP_B64 repository secret."
+            exit 1
+          fi
+
+      - name: Publish AvelisHubBL.dll
+        run: |
+          dotnet publish AvelisHubBL/AvelisHubBL.csproj \
+            --configuration Release \
+            -p:GameReferencesDir="$GITHUB_WORKSPACE/GameReferences" \
+            -p:RestoreIgnoreFailedSources=true \
+            --output dist/build
+          cp dist/build/AvelisHubBL.dll AvelisHubBL.dll
+          sha256sum AvelisHubBL.dll > SHA256SUMS.txt
+
+      - name: Upload built DLL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AvelisHubBL-dll
+          path: |
+            AvelisHubBL.dll
+            SHA256SUMS.txt
