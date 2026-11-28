@@ -1,13 +1,13 @@
 # Avelis Hub BL
 
-Avelis Hub BL is an Android-only **BONELAB code mod** for standalone Meta Quest. It adds a page to BoneLib’s existing Bone Menu and an optional world-space panel with rounded graphite controls, a translucent rim where supported, and monochrome Lucide icons. Nothing runs outside the game at play time. Fusion is not required; the hub pauses gameplay overrides when it detects a Fusion session.
+Avelis Hub BL is an Android-only **BONELAB code mod** for standalone Meta Quest. It adds a page to BoneLib’s existing Bone Menu and an optional world-space panel styled in high-contrast dark obsidian glass with a detached navigation rail, specular hairline rims, and monochrome Lucide icons. Nothing runs outside the game at play time. Fusion is not required; the hub pauses gameplay overrides when it detects a Fusion session.
 
 ## Install on Quest
 
 1. Back up your BONELAB data and OBBs before patching. Patch and launch BONELAB with **LemonLoader 0.6.5.1**, grant its requested file permissions, and let the first run finish.
 2. Install a Quest build of **BoneLib** that already works with your game patch and loader. The supplied compile reference is BoneLib **3.2.2**; its Thunderstore manifest declares the upstream MelonLoader 0.6.6 package, not an on-device LemonLoader compatibility guarantee. Confirm Bone Menu opens with your Quest setup before adding the hub.
 3. With BONELAB closed, put **only** `AvelisHubBL.dll` in the existing `/sdcard/MelonLoader/<package name>/Mods/` folder. Use the package folder created by LemonLoader. Do not put reference DLLs from this repository in `Mods`.
-4. Start BONELAB and enter a single-player scene. Open **Bone Menu → Avelis Hub BL**, or press **X + Y** together on the left controller. Once the floating panel settles, aim with the right controller and press **A** to select. X + Y closes the panel. If another mod also uses X + Y, use **Toggle VR panel** under Avelis’s Bone Menu settings instead.
+4. Start BONELAB and enter a single-player scene. Open **Bone Menu → Avelis Hub BL**, or press **X + Y** together on the left controller. Once the floating panel settles, aim with the right controller and pull the **Right Trigger** to select (leaving **A** free for jumping). X + Y closes the panel. If another mod also uses X + Y, use **Toggle VR panel** under Avelis’s Bone Menu settings instead.
 
 ## Controls
 

@@ -21,6 +21,9 @@ app.use((req, res, next) => {
   if (BLOCKED_PATHS.has(req.path) || req.path.startsWith('/node_modules')) {
     return res.status(404).send('Not found');
   }
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   next();
 });
 
@@ -31,6 +34,26 @@ app.get('/README.txt', (req, res) => {
     return res.sendFile(readmePath);
   }
   return res.status(404).send('Not found');
+});
+
+app.get('/Lucide-LICENSE.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8');
+  return res.send(`ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+`);
 });
 
 app.get('/SHA256SUMS.txt', (req, res) => {
@@ -50,7 +73,7 @@ app.get('/SHA256SUMS.txt', (req, res) => {
   return res.send(lines.join('\n') + (lines.length ? '\n' : ''));
 });
 
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { etag: false, lastModified: false, maxAge: 0 }));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

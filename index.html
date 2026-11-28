@@ -3,40 +3,1592 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Avelis Hub BL brings single-player tools to BONELAB on standalone Meta Quest through Bone Menu and a controller-operated VR panel.">
+  <meta name="description" content="Avelis Hub BL brings single-player tools to BONELAB on standalone Meta Quest through Bone Menu and an Apple-inspired dark obsidian glass VR panel with Right Trigger selection.">
   <meta property="og:site_name" content="Avelis Hub BL">
   <meta property="og:title" content="Avelis Hub BL">
-  <meta property="og:description" content="A Quest BONELAB mod with Bone Menu integration and an in-game VR tools panel.">
+  <meta property="og:description" content="A Quest BONELAB mod with Bone Menu integration and a dark obsidian spatial glass VR tools panel.">
   <title>Avelis Hub BL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #07080a;
+      --bg-elevated: #0d0f13;
+      --glass-rail: rgba(18, 20, 26, 0.82);
+      --glass-main: rgba(13, 15, 20, 0.84);
+      --glass-row: rgba(255, 255, 255, 0.048);
+      --glass-row-hover: rgba(255, 255, 255, 0.095);
+      --glass-active: rgba(255, 255, 255, 0.135);
+      --rim-specular: rgba(255, 255, 255, 0.18);
+      --rim-subtle: rgba(255, 255, 255, 0.085);
+      --divider: rgba(255, 255, 255, 0.08);
+      --text: #f5f7fa;
+      --text-muted: rgba(235, 239, 247, 0.68);
+      --text-quiet: rgba(235, 239, 247, 0.44);
+      --apple-green: #34c759;
+      --apple-amber: #ff9f0a;
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+      --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     * { box-sizing: border-box; }
-    body { margin: 0; background: #101010; color: #f4f4f4; font: 16px/1.6 system-ui, sans-serif; }
-    main { max-width: 43rem; margin: 0 auto; padding: clamp(2rem, 8vw, 6rem) 1.4rem; }
-    h1 { margin: .1em 0; font-size: clamp(2.5rem, 9vw, 4.5rem); line-height: 1.05; letter-spacing: -.055em; }
-    h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
-    p { color: #c2c2c2; }
-    .tag { color: #c2c2c2; letter-spacing: .14em; font-size: .75rem; font-weight: 700; }
-    a { color: inherit; text-underline-offset: .2em; }
-    .links { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin: 2rem 0; }
-    .download { padding: .65rem 1rem; border-radius: .3rem; background: #f4f4f4; color: #151515; font-weight: 700; text-decoration: none; }
-    .note { padding: .85rem 1rem; border: 1px solid #505050; border-radius: .3rem; }
-    code { overflow-wrap: anywhere; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      letter-spacing: 0.005em;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Subtle spatial atmosphere behind the glass showcase */
+    .ambient-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(65% 50% at 50% 18%, rgba(164, 182, 214, 0.09) 0%, rgba(164, 182, 214, 0) 70%),
+        radial-gradient(45% 40% at 18% 65%, rgba(255, 255, 255, 0.03) 0%, transparent 70%),
+        linear-gradient(180deg, #07080a 0%, #090b0f 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    /* 3-Zone Top Bar Contract */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      background: rgba(7, 8, 10, 0.78);
+      border-bottom: 1px solid var(--divider);
+    }
+    .topbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+    .brand {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 180ms var(--ease-apple);
+    }
+    .nav-links a:hover {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 6px;
+      text-decoration-color: rgba(255, 255, 255, 0.35);
+    }
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #0b0d11;
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: transform 180ms var(--ease-apple), opacity 180ms var(--ease-apple);
+    }
+    .cta-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    .cta-primary:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.75);
+      outline-offset: 2px;
+    }
+
+    /* Hero Intro */
+    .hero {
+      padding: 44px 0 28px;
+    }
+    .hero-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    .hero-copy {
+      max-width: 660px;
+    }
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-quiet);
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+    }
+    .hero-copy p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 15.5px;
+      max-width: 62ch;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--rim-subtle);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 180ms var(--ease-apple), border-color 180ms var(--ease-apple);
+    }
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--rim-specular);
+    }
+
+    /* Spatial VR Showcase Stage */
+    .spatial-stage {
+      position: relative;
+      border-radius: 28px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        radial-gradient(80% 70% at 50% 40%, rgba(255, 255, 255, 0.045) 0%, rgba(12, 14, 18, 0.4) 65%, rgba(7, 8, 10, 0.9) 100%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 72px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 72px);
+      box-shadow: 0 36px 90px -24px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+    }
+    .stage-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .stage-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .kbd {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 1px 2px;
+    }
+
+    /* Spatial Glass Panel Rig (Mirrors VrPanel.cs) */
+    .vr-rig {
+      position: relative;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      gap: 16px;
+      min-height: 556px;
+      transition: transform 200ms var(--ease-apple), opacity 200ms var(--ease-apple);
+      transform-origin: center center;
+    }
+    .vr-rig.is-closed {
+      opacity: 0;
+      transform: scale(0.975);
+      pointer-events: none;
+    }
+
+    .vr-closed-notice {
+      display: none;
+      position: absolute;
+      inset: 64px 28px 28px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+    .vr-closed-notice.is-visible {
+      display: flex;
+    }
+
+    .glass-pane {
+      position: relative;
+      border-radius: 24px;
+      backdrop-filter: blur(32px) saturate(145%);
+      -webkit-backdrop-filter: blur(32px) saturate(145%);
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.11),
+        0 24px 64px -16px rgba(0, 0, 0, 0.72);
+    }
+
+    /* Detached Left Sidebar */
+    .vr-rail {
+      background: var(--glass-rail);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .rail-brand {
+      padding: 4px 10px 14px;
+      border-bottom: 1px solid var(--divider);
+      margin-bottom: 14px;
+    }
+    .rail-title {
+      font-family: var(--font-display);
+      font-size: 16.5px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .rail-subtitle {
+      font-size: 12px;
+      color: var(--text-quiet);
+      margin-top: 2px;
+    }
+    .rail-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 150ms var(--ease-apple), color 150ms var(--ease-apple), border-color 150ms var(--ease-apple);
+    }
+    .nav-item:hover {
+      background: var(--glass-row);
+      color: var(--text);
+    }
+    .nav-item.is-active {
+      background: var(--glass-active);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    .nav-item svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      opacity: 0.88;
+    }
+
+    /* Main Obsidian Workspace */
+    .vr-main {
+      background: var(--glass-main);
+      padding: 22px 24px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .vr-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--divider);
+      margin-bottom: 14px;
+    }
+    .vr-heading {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+    .vr-caption {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .vr-version {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-quiet);
+      white-space: nowrap;
+      padding-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Control Rows */
+    .vr-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-height: 368px;
+    }
+    .vr-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 54px;
+      padding: 9px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: var(--glass-row);
+      transition: background 150ms var(--ease-apple), border-color 150ms var(--ease-apple), transform 120ms var(--ease-apple);
+    }
+    .vr-row.is-interactive {
+      cursor: pointer;
+    }
+    .vr-row.is-interactive:hover {
+      background: var(--glass-row-hover);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .vr-row.is-locked {
+      opacity: 0.62;
+    }
+    .row-text {
+      min-width: 0;
+      flex: 1;
+    }
+    .row-title {
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row-detail {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .row-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .state-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 44px;
+      text-align: right;
+    }
+    .state-label.is-on {
+      color: var(--text);
+    }
+
+    /* Apple Capsule Toggle Switch */
+    .apple-switch {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: background 180ms var(--ease-apple), border-color 180ms var(--ease-apple);
+      flex-shrink: 0;
+    }
+    .apple-switch.is-on {
+      background: var(--apple-green);
+      border-color: rgba(52, 199, 89, 0.7);
+    }
+    .apple-switch-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+      transition: transform 180ms var(--ease-apple);
+    }
+    .apple-switch.is-on .apple-switch-thumb {
+      transform: translateX(18px);
+    }
+
+    /* Apple Slider Row */
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 140ms var(--ease-apple);
+    }
+    .step-btn:hover { background: rgba(255, 255, 255, 0.18); }
+    .range-track {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 132px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      outline: none;
+      cursor: pointer;
+    }
+    .range-track::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+    }
+    .range-track::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border: 0;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+    }
+
+    .action-pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Spatial Keyboard Overlay */
+    .vr-keyboard {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      min-height: 368px;
+    }
+    .vr-keyboard.is-visible { display: flex; }
+    .kb-query {
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.35);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text);
+    }
+    .kb-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 2px;
+    }
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+    .kb-key {
+      min-width: 42px;
+      height: 38px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 120ms var(--ease-apple);
+    }
+    .kb-key:hover { background: rgba(255, 255, 255, 0.18); }
+    .kb-key.is-primary {
+      background: #ffffff;
+      color: #0b0d11;
+      font-weight: 600;
+      border-color: #ffffff;
+    }
+
+    /* VR Footer */
+    .vr-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 14px;
+      margin-top: 14px;
+      border-top: 1px solid var(--divider);
+    }
+    .vr-status {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vr-pager {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .page-btn {
+      width: 38px;
+      height: 30px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 140ms var(--ease-apple), opacity 140ms var(--ease-apple);
+    }
+    .page-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.18); }
+    .page-btn:disabled { opacity: 0.35; cursor: default; }
+    .page-num {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    /* Simulated VR Pointer Reticle */
+    .vr-reticle {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18), 0 0 18px rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+      transition: opacity 150ms ease, transform 120ms var(--ease-apple);
+      z-index: 30;
+    }
+    .vr-reticle.is-active { opacity: 1; }
+    .vr-reticle.is-trigger { transform: translate(-50%, -50%) scale(0.72); }
+
+    /* Content Sections */
+    .section {
+      padding: 64px 0;
+      border-top: 1px solid var(--divider);
+    }
+    .section-head {
+      max-width: 680px;
+      margin-bottom: 32px;
+    }
+    .section-kicker {
+      font-size: 13px;
+      color: var(--text-quiet);
+      margin-bottom: 6px;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 2.4vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      text-wrap: balance;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+    .obsidian-card {
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid var(--rim-subtle);
+      background: rgba(255, 255, 255, 0.03);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .obsidian-card h3 {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+    .obsidian-card p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14.5px;
+    }
+    .card-meta {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-quiet);
+      margin-bottom: 10px;
+    }
+
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .steps li {
+      padding: 22px 24px;
+      border-radius: 20px;
+      border: 1px solid var(--rim-subtle);
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-quiet);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .steps strong { color: var(--text); font-weight: 600; }
+    .steps p { margin: 6px 0 0; color: var(--text-muted); font-size: 14.5px; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.07);
+      padding: 2px 6px;
+      border-radius: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .download-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .code-block {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--rim-subtle);
+      background: rgba(0, 0, 0, 0.45);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      overflow-x: auto;
+    }
+
+    footer {
+      padding: 36px 0 56px;
+      border-top: 1px solid var(--divider);
+      color: var(--text-quiet);
+      font-size: 13.5px;
+    }
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .footer-links a:hover {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    @media (max-width: 960px) {
+      .vr-rig { grid-template-columns: 1fr; }
+      .grid-3, .grid-2, .steps { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .spatial-stage { padding: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <div class="tag">BONELAB / META QUEST / SINGLE PLAYER</div>
-    <h1>Avelis Hub BL</h1>
-    <p>A Quest mod that runs inside BONELAB. Open it from Bone Menu or press <strong>X + Y</strong> together on your left controller to open the VR panel.</p>
-    <div class="links">
-      <a class="download" href="/AvelisHubBL.dll" download>Download DLL</a>
-      <a href="/AvelisHubBL-source.zip" download>Source code</a>
-      <a href="/README.txt">Install guide</a>
+  <div class="ambient-canvas" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">Avelis Hub BL</a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#preview">Spatial UI</a>
+        <a href="#controls">Controls</a>
+        <a href="#install">Install</a>
+        <a href="#source">Source</a>
+      </nav>
+      <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.4" download="AvelisHubBL-source.zip">Download Source</a>
     </div>
-    <h2>Install on Quest</h2>
-    <p>With LemonLoader 0.6.5.1 and a Quest-compatible BoneLib already installed, copy only <code>AvelisHubBL.dll</code> into your game’s existing <code>/sdcard/MelonLoader/&lt;package name&gt;/Mods/</code> folder. In the VR panel, point with the right controller and press <strong>A</strong> to select.</p>
-    <p class="note"><strong>Device validation pending.</strong> This package has not been tested on a physical Quest. The install guide lists supported controls and known limitations.</p>
-    <p><a href="/SHA256SUMS.txt">File checksums</a> · <a href="/Lucide-LICENSE.txt">Icon license</a></p>
+  </header>
+
+  <main id="top" class="container">
+    <section class="hero" id="preview">
+      <div class="hero-head">
+        <div class="hero-copy">
+          <div class="meta-line">
+            <span>BONELAB</span>
+            <span aria-hidden="true">·</span>
+            <span>Meta Quest</span>
+            <span aria-hidden="true">·</span>
+            <span>Single Player</span>
+            <span aria-hidden="true">·</span>
+            <span>v0.2.4</span>
+          </div>
+          <h1>Obsidian spatial glass, built for Quest controllers.</h1>
+          <p>
+            Avelis Hub BL pairs Bone Menu integration with a detached dark obsidian glass VR panel. Aim with your right hand and pull the <strong>Right Trigger</strong> to select—leaving <strong>A</strong> dedicated to jumping.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button type="button" class="btn-ghost" id="toggle-panel-btn">Toggle Panel (X + Y)</button>
+          <a class="btn-ghost" href="/AvelisHubBL.dll" download>Prebuilt DLL (0.2.2)</a>
+        </div>
+      </div>
+
+      <div class="spatial-stage" id="spatial-stage">
+        <div class="stage-toolbar">
+          <div class="stage-hint">
+            <span>Interactive VR Panel Preview</span>
+            <span aria-hidden="true">·</span>
+            <span>Move cursor to aim · Click to simulate <span class="kbd">Right Trigger</span></span>
+          </div>
+          <span class="vr-version" id="pointer-readout">Pointer active</span>
+        </div>
+
+        <div class="vr-reticle" id="vr-reticle" aria-hidden="true"></div>
+
+        <div class="vr-closed-notice" id="vr-closed-notice">
+          <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600;">VR Panel Closed</div>
+          <div style="color: var(--text-muted); font-size: 14px;">Press Left X + Y in BONELAB or click Toggle Panel above to reopen.</div>
+        </div>
+
+        <div class="vr-rig" id="vr-rig">
+          <aside class="glass-pane vr-rail" aria-label="Mod sections">
+            <div class="rail-brand">
+              <div class="rail-title">Avelis Hub BL</div>
+              <div class="rail-subtitle">Spatial Tools</div>
+            </div>
+            <div class="rail-nav" id="rail-nav"></div>
+          </aside>
+
+          <section class="glass-pane vr-main" aria-label="Section controls">
+            <div class="vr-header">
+              <div>
+                <h2 class="vr-heading" id="panel-heading">Player</h2>
+                <p class="vr-caption" id="panel-caption">Health, locomotion and local rig overrides</p>
+              </div>
+              <div class="vr-version">Quest · 0.2.4</div>
+            </div>
+
+            <div class="vr-rows" id="panel-rows"></div>
+
+            <div class="vr-keyboard" id="panel-keyboard" aria-label="Search keyboard">
+              <div class="kb-query" id="kb-query">Type to search…</div>
+              <div class="kb-rows" id="kb-rows"></div>
+            </div>
+
+            <div class="vr-footer">
+              <div class="vr-status" id="panel-status">X + Y to close · Right Trigger to select</div>
+              <div class="vr-pager">
+                <button type="button" class="page-btn" id="page-prev" aria-label="Previous page">‹</button>
+                <span class="page-num" id="page-num">1 / 2</span>
+                <button type="button" class="page-btn" id="page-next" aria-label="Next page">›</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="controls">
+      <div class="section-head">
+        <div class="section-kicker">Controller Ergonomics</div>
+        <h2>Right Trigger selects. A jumps.</h2>
+        <p>Selection uses an edge-triggered Right Trigger pull with hysteresis release reset so controls never double-fire and movement buttons stay unobstructed.</p>
+      </div>
+      <div class="grid-3">
+        <article class="obsidian-card">
+          <div class="card-meta">Left Controller · X + Y</div>
+          <h3>Open or close panel</h3>
+          <p>Press X and Y together on the left Touch controller to summon or dismiss the spatial glass window smoothly in front of your headset.</p>
+        </article>
+        <article class="obsidian-card">
+          <div class="card-meta">Right Controller · Trigger</div>
+          <h3>Edge-triggered selection</h3>
+          <p>Aim the pointer beam onto any sidebar tab, toggle switch, slider track, or keyboard key and pull the Right Trigger once to activate.</p>
+        </article>
+        <article class="obsidian-card">
+          <div class="card-meta">Right Controller · A Button</div>
+          <h3>Dedicated to jump</h3>
+          <p>Right A is no longer intercepted by the VR panel, keeping jumping and jump-multiplier boosts natural even while the overlay is visible.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="install">
+      <div class="section-head">
+        <div class="section-kicker">Standalone Meta Quest</div>
+        <h2>Install on BONELAB</h2>
+        <p>Avelis Hub BL runs inside BONELAB with LemonLoader and BoneLib. Nothing runs outside the game at play time, and Fusion sessions automatically pause gameplay overrides.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="step-num">01. Loader Setup</span>
+          <strong>Prepare LemonLoader 0.6.5.1</strong>
+          <p>Back up BONELAB data and OBBs, patch with LemonLoader 0.6.5.1, grant file permissions, and complete the first launch.</p>
+        </li>
+        <li>
+          <span class="step-num">02. BoneLib Dependency</span>
+          <strong>Verify BoneLib works first</strong>
+          <p>Install a Quest-compatible BoneLib build (compile target is 3.2.2) and confirm Bone Menu opens cleanly in game.</p>
+        </li>
+        <li>
+          <span class="step-num">03. Copy Mod Assembly</span>
+          <strong>Drop only AvelisHubBL.dll into Mods</strong>
+          <p>Copy <code>AvelisHubBL.dll</code> into <code>/sdcard/MelonLoader/&lt;package name&gt;/Mods/</code>. Never copy reference DLLs into Mods.</p>
+        </li>
+        <li>
+          <span class="step-num">04. Launch &amp; Control</span>
+          <strong>Summon with X + Y or Bone Menu</strong>
+          <p>Enter a single-player scene, press X + Y on your left controller, point with your right hand, and pull Right Trigger to select.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="section" id="source">
+      <div class="section-head">
+        <div class="section-kicker">Source &amp; Release Artifacts</div>
+        <h2>Build the updated Quest DLL locally</h2>
+        <p><code>AvelisHubBL-source.zip</code> includes the Apple dark obsidian glass <code>VrPanel.cs</code> redesign and Right Trigger input binding. Recompile into a Quest DLL using your local <code>GameReferences/</code> assemblies.</p>
+      </div>
+      <div class="grid-2">
+        <div class="obsidian-card">
+          <h3>Release Downloads</h3>
+          <p>Download the updated C# source archive, inspect checksums, or grab the prior 0.2.2 precompiled DLL.</p>
+          <div class="download-strip">
+            <a class="cta-primary" href="/AvelisHubBL-source.zip?v=0.2.4" download="AvelisHubBL-source.zip">Updated Source (.zip)</a>
+            <a class="btn-ghost" href="/AvelisHubBL.dll" download>Prebuilt DLL (0.2.2)</a>
+            <a class="btn-ghost" href="/README.txt">Install Guide</a>
+          </div>
+          <p style="margin-top: 14px; font-size: 13px; color: var(--text-quiet);">
+            Device validation pending on physical Quest hardware. Check <a href="/SHA256SUMS.txt" style="color: var(--text-muted);">SHA256SUMS.txt</a> and <a href="/Lucide-LICENSE.txt" style="color: var(--text-muted);">Lucide-LICENSE.txt</a>.
+          </p>
+        </div>
+        <div class="obsidian-card">
+          <h3>Compile with .NET 8 SDK</h3>
+          <p>Place MelonLoader, Il2CppAssemblies, UnityEngine modules, and BoneLib.dll inside <code>GameReferences/</code> and publish:</p>
+          <div class="code-block">dotnet publish AvelisHubBL/AvelisHubBL.csproj -c Release</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-inner">
+        <span>Avelis Hub BL · MIT License · Quest Single-Player Mod</span>
+        <div class="footer-links">
+          <a href="/README.txt">README.txt</a>
+          <a href="/SHA256SUMS.txt">SHA256SUMS.txt</a>
+          <a href="/Lucide-LICENSE.txt">Lucide-LICENSE.txt</a>
+          <a href="/LICENSE">LICENSE</a>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <script>
+    const ICONS = {
+      player: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+      weapons: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>',
+      spawning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>',
+      movement: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></svg>',
+      world: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+      npcs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>',
+      utilities: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+      settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>'
+    };
+
+    const CRATES = [
+      { name: 'Ford (NPC)', category: 'NPCs', barcode: 'SLZ.BONELAB.Spawnable.Ford' },
+      { name: 'Omni Projector', category: 'NPCs', barcode: 'SLZ.BONELAB.Spawnable.OmniProjector' },
+      { name: 'Crablet', category: 'NPCs', barcode: 'SLZ.BONELAB.Spawnable.Crablet' },
+      { name: 'Eder 22 Pistol', category: 'Weapons', barcode: 'SLZ.BONELAB.Spawnable.Eder22' },
+      { name: 'MK18 Sabrelake', category: 'Weapons', barcode: 'SLZ.BONELAB.Spawnable.MK18' },
+      { name: 'Explosive Barrel', category: 'Props', barcode: 'SLZ.BONELAB.Spawnable.Barrel' },
+      { name: 'Utility Crate', category: 'Props', barcode: 'SLZ.BONELAB.Spawnable.Crate' }
+    ];
+
+    const DEFAULTS = {
+      god: false, reserve: false, magazine: false, recoil: false, freeze: false,
+      jump: 1, speed: 1, damage: 1, fireRate: 1, reload: false,
+      flight: false, flySpeed: 4, noclip: false, teleport: 5,
+      gravity: 1, timeScale: 1,
+      spawnDistance: 2, spawnCount: 1, spawnYaw: 0, spawnFloor: true,
+      objectScale: 1, objectYaw: 0
+    };
+
+    const state = {
+      sectionIndex: 0,
+      pageIndex: 0,
+      panelOpen: true,
+      editingSearch: false,
+      query: '',
+      categoryIndex: 0,
+      categories: ['All', 'Props', 'Weapons', 'NPCs'],
+      crateIndex: 0,
+      tracked: ['Ford (NPC) #1'],
+      trackedIndex: 0,
+      status: 'X + Y to close · Right Trigger to select',
+      settings: { ...DEFAULTS }
+    };
+
+    function filteredCrates() {
+      const cat = state.categories[state.categoryIndex];
+      const q = state.query.trim().toLowerCase();
+      return CRATES.filter(c => (cat === 'All' || c.category === cat) && (!q || c.name.toLowerCase().includes(q) || c.barcode.toLowerCase().includes(q)));
+    }
+
+    function selectedCrateLabel() {
+      const list = filteredCrates();
+      if (!list.length) return 'No matching crates';
+      const idx = Math.max(0, Math.min(state.crateIndex, list.length - 1));
+      return list[idx].name;
+    }
+
+    function selectedTrackedLabel() {
+      if (!state.tracked.length) return 'None tracked';
+      const idx = Math.max(0, Math.min(state.trackedIndex, state.tracked.length - 1));
+      return state.tracked[idx];
+    }
+
+    const SECTIONS = [
+      {
+        id: 'player', title: 'Player', icon: ICONS.player,
+        caption: 'Health, locomotion and local rig overrides',
+        rows: [
+          { type: 'toggle', key: 'god', title: 'God mode' },
+          { type: 'action', title: 'Restore health', run: () => 'Health restored.' },
+          { type: 'toggle', key: 'reserve', title: 'Infinite reserve ammo' },
+          { type: 'toggle', key: 'magazine', title: 'Infinite magazine' },
+          { type: 'toggle', key: 'recoil', title: 'No recoil' },
+          { type: 'locked', title: 'No fall damage', detail: 'No verified fall-only hook' },
+          { type: 'slider', key: 'jump', title: 'Jump multiplier', min: 1, max: 4, step: 0.25 },
+          { type: 'slider', key: 'speed', title: 'Speed multiplier', min: 0.5, max: 3, step: 0.25 },
+          { type: 'toggle', key: 'freeze', title: 'Freeze player' }
+        ]
+      },
+      {
+        id: 'weapons', title: 'Weapons', icon: ICONS.weapons,
+        caption: 'Tools for compatible weapons held by the local player',
+        rows: [
+          { type: 'toggle', key: 'reserve', title: 'Infinite reserve ammo' },
+          { type: 'toggle', key: 'magazine', title: 'Infinite magazine' },
+          { type: 'toggle', key: 'recoil', title: 'No recoil' },
+          { type: 'slider', key: 'damage', title: 'Damage multiplier', min: 0.25, max: 4, step: 0.25 },
+          { type: 'slider', key: 'fireRate', title: 'Fire rate multiplier', min: 1, max: 3, step: 0.25 },
+          { type: 'toggle', key: 'reload', title: 'Refill empty magazine' },
+          { type: 'action', title: 'Inspect held weapon', run: () => 'Right hand: MK18 Sabrelake (30/30 · 750 RPM).' },
+          {
+            type: 'action', title: 'Reset weapon overrides',
+            run: () => {
+              Object.assign(state.settings, { reserve: false, magazine: false, recoil: false, damage: 1, fireRate: 1, reload: false });
+              return 'Weapon overrides restored.';
+            }
+          }
+        ]
+      },
+      {
+        id: 'spawning', title: 'Spawning', icon: ICONS.spawning,
+        caption: 'Browse real crates from the active Asset Warehouse',
+        rows: [
+          {
+            type: 'action', title: 'Next crate category',
+            detail: () => state.categories[state.categoryIndex],
+            run: () => {
+              state.categoryIndex = (state.categoryIndex + 1) % state.categories.length;
+              state.crateIndex = 0;
+              return `Category: ${state.categories[state.categoryIndex]}`;
+            }
+          },
+          { type: 'action', title: 'Refresh warehouse', detail: () => `${CRATES.length} crates indexed`, run: () => 'Warehouse refreshed.' },
+          { type: 'search', title: 'Search by name or barcode', detail: () => state.query || 'All crates' },
+          {
+            type: 'action', title: 'Previous result',
+            run: () => {
+              const list = filteredCrates();
+              if (!list.length) return 'No crates match current filter.';
+              state.crateIndex = (state.crateIndex - 1 + list.length) % list.length;
+              return `Selected ${list[state.crateIndex].name}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Next result',
+            detail: selectedCrateLabel,
+            run: () => {
+              const list = filteredCrates();
+              if (!list.length) return 'No crates match current filter.';
+              state.crateIndex = (state.crateIndex + 1) % list.length;
+              return `Selected ${list[state.crateIndex].name}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Spawn selected',
+            detail: selectedCrateLabel,
+            run: () => {
+              const label = selectedCrateLabel();
+              if (label === 'No matching crates') return label;
+              state.tracked.push(`${label} #${state.tracked.length + 1}`);
+              state.trackedIndex = state.tracked.length - 1;
+              return `Spawned ${state.settings.spawnCount}x ${label}.`;
+            }
+          },
+          { type: 'slider', key: 'spawnDistance', title: 'Distance (m)', min: 1, max: 10, step: 0.5 },
+          { type: 'slider', key: 'spawnCount', title: 'Quantity', min: 1, max: 5, step: 1 },
+          { type: 'slider', key: 'spawnYaw', title: 'Yaw (degrees)', min: -180, max: 180, step: 15 },
+          { type: 'toggle', key: 'spawnFloor', title: 'Place on surface' },
+          {
+            type: 'action', title: 'Previous tracked object',
+            run: () => {
+              if (!state.tracked.length) return 'No tracked objects.';
+              state.trackedIndex = (state.trackedIndex - 1 + state.tracked.length) % state.tracked.length;
+              return `Selected ${selectedTrackedLabel()}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Next tracked object',
+            detail: selectedTrackedLabel,
+            run: () => {
+              if (!state.tracked.length) return 'No tracked objects.';
+              state.trackedIndex = (state.trackedIndex + 1) % state.tracked.length;
+              return `Selected ${selectedTrackedLabel()}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Remove selected',
+            run: () => {
+              if (!state.tracked.length) return 'No tracked objects.';
+              const removed = state.tracked.splice(state.trackedIndex, 1)[0];
+              state.trackedIndex = Math.max(0, Math.min(state.trackedIndex, state.tracked.length - 1));
+              return `Removed ${removed}.`;
+            }
+          },
+          {
+            type: 'action', title: 'Clear tracked spawns',
+            run: () => {
+              const count = state.tracked.length;
+              state.tracked = [];
+              state.trackedIndex = 0;
+              return `Cleared ${count} tracked spawn(s).`;
+            }
+          }
+        ]
+      },
+      {
+        id: 'movement', title: 'Movement', icon: ICONS.movement,
+        caption: 'Left stick moves in flight; right stick lifts or lowers',
+        rows: [
+          { type: 'toggle', key: 'flight', title: 'Flight' },
+          { type: 'slider', key: 'flySpeed', title: 'Flight speed (m/s)', min: 1, max: 12, step: 0.5 },
+          { type: 'toggle', key: 'noclip', title: 'Noclip' },
+          { type: 'action', title: 'Teleport to aim', run: () => 'Teleported.' },
+          { type: 'slider', key: 'teleport', title: 'Teleport range (m)', min: 1, max: 25, step: 1 },
+          { type: 'slider', key: 'speed', title: 'Speed multiplier', min: 0.5, max: 3, step: 0.25 },
+          { type: 'slider', key: 'jump', title: 'Jump multiplier', min: 1, max: 4, step: 0.25 },
+          { type: 'slider', key: 'gravity', title: 'Gravity multiplier', min: 0.25, max: 2, step: 0.25 }
+        ]
+      },
+      {
+        id: 'world', title: 'World', icon: ICONS.world,
+        caption: 'Reversible scene and tracked prop controls',
+        rows: [
+          { type: 'slider', key: 'gravity', title: 'Gravity multiplier', min: 0.25, max: 2, step: 0.25 },
+          { type: 'slider', key: 'timeScale', title: 'Time scale', min: 0.25, max: 1.5, step: 0.25 },
+          { type: 'action', title: 'Previous tracked object', run: () => `Selected ${selectedTrackedLabel()}.` },
+          { type: 'action', title: 'Next tracked object', detail: selectedTrackedLabel, run: () => `Selected ${selectedTrackedLabel()}.` },
+          { type: 'slider', key: 'objectScale', title: 'Object scale', min: 0.5, max: 2, step: 0.25 },
+          { type: 'slider', key: 'objectYaw', title: 'Object yaw', min: -180, max: 180, step: 15 },
+          { type: 'action', title: 'Apply scale and rotation', run: () => `Updated ${selectedTrackedLabel()}.` },
+          { type: 'action', title: 'Move selected to aim', run: () => `Moved ${selectedTrackedLabel()} to aim.` },
+          { type: 'action', title: 'Restore selected transform', run: () => `Restored ${selectedTrackedLabel()} transform.` },
+          { type: 'action', title: 'Freeze tracked NPCs', run: () => 'Tracked NPCs frozen.' },
+          { type: 'action', title: 'Unfreeze tracked NPCs', run: () => 'Tracked NPCs unfrozen.' },
+          {
+            type: 'action', title: 'Reset world overrides',
+            run: () => {
+              state.settings.gravity = 1;
+              state.settings.timeScale = 1;
+              return 'World overrides restored.';
+            }
+          }
+        ]
+      },
+      {
+        id: 'npcs', title: 'NPCs', icon: ICONS.npcs,
+        caption: 'Browse tagged NPC crates; manage this hub’s spawns',
+        rows: [
+          {
+            type: 'action', title: 'Browse NPC crates', detail: selectedCrateLabel,
+            run: () => {
+              state.categoryIndex = state.categories.indexOf('NPCs');
+              state.crateIndex = 0;
+              return 'Showing NPC crates.';
+            }
+          },
+          { type: 'search', title: 'Search by name or barcode', detail: () => state.query || 'All crates' },
+          {
+            type: 'action', title: 'Spawn selected NPC', detail: selectedCrateLabel,
+            run: () => {
+              const label = selectedCrateLabel();
+              state.tracked.push(`${label} #${state.tracked.length + 1}`);
+              return `Spawned ${label}.`;
+            }
+          },
+          { type: 'action', title: 'Freeze selected', run: () => `Froze ${selectedTrackedLabel()}.` },
+          { type: 'action', title: 'Unfreeze selected', run: () => `Unfroze ${selectedTrackedLabel()}.` },
+          { type: 'action', title: 'Inspect selected', run: () => `${selectedTrackedLabel()} · Active` }
+        ]
+      },
+      {
+        id: 'utilities', title: 'Utilities', icon: ICONS.utilities,
+        caption: 'Cleanup, recovery and compatibility information',
+        rows: [
+          { type: 'action', title: 'Clear tracked spawns', run: () => { state.tracked = []; return 'Tracked spawns cleared.'; } },
+          {
+            type: 'action', title: 'Reset player overrides',
+            run: () => {
+              Object.assign(state.settings, { god: false, freeze: false, flight: false, noclip: false, jump: 1, speed: 1, gravity: 1 });
+              return 'Player movement, collision and gravity restored.';
+            }
+          },
+          {
+            type: 'action', title: 'Reset world overrides',
+            run: () => {
+              state.settings.gravity = 1;
+              state.settings.timeScale = 1;
+              return 'World overrides restored.';
+            }
+          },
+          { type: 'action', title: 'About Avelis Hub BL', run: () => 'Avelis Hub BL 0.2.4 · Quest / LemonLoader 0.6.5.1 · BoneLib' },
+          { type: 'action', title: 'Controller help', run: () => 'Left X + Y opens/closes. Aim with right hand, pull Right Trigger to select. A jumps.' }
+        ]
+      },
+      {
+        id: 'settings', title: 'Settings', icon: ICONS.settings,
+        caption: 'Save changes between Quest play sessions',
+        rows: [
+          {
+            type: 'action', title: 'Save settings',
+            run: () => {
+              localStorage.setItem('avelis_hub_settings', JSON.stringify(state.settings));
+              return 'Settings saved.';
+            }
+          },
+          {
+            type: 'action', title: 'Load saved settings',
+            run: () => {
+              const saved = localStorage.getItem('avelis_hub_settings');
+              if (!saved) return 'No saved settings found.';
+              Object.assign(state.settings, JSON.parse(saved));
+              return 'Saved settings loaded.';
+            }
+          },
+          {
+            type: 'action', title: 'Restore defaults and save',
+            run: () => {
+              state.settings = { ...DEFAULTS };
+              localStorage.setItem('avelis_hub_settings', JSON.stringify(state.settings));
+              return 'Default settings restored and saved.';
+            }
+          },
+          {
+            type: 'action', title: 'Toggle VR panel',
+            run: () => {
+              togglePanel();
+              return state.panelOpen ? 'VR panel open.' : 'VR panel closed.';
+            }
+          }
+        ]
+      }
+    ];
+
+    const ROWS_PER_PAGE = 6;
+    const KEYBOARD_ROWS = [
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+      ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '-', '_', '.'],
+      ['Cancel', 'Space', 'Delete', 'Clear', 'Search']
+    ];
+
+    const railNav = document.getElementById('rail-nav');
+    const headingEl = document.getElementById('panel-heading');
+    const captionEl = document.getElementById('panel-caption');
+    const rowsEl = document.getElementById('panel-rows');
+    const keyboardEl = document.getElementById('panel-keyboard');
+    const kbQueryEl = document.getElementById('kb-query');
+    const kbRowsEl = document.getElementById('kb-rows');
+    const statusEl = document.getElementById('panel-status');
+    const pagePrevEl = document.getElementById('page-prev');
+    const pageNextEl = document.getElementById('page-next');
+    const pageNumEl = document.getElementById('page-num');
+    const rigEl = document.getElementById('vr-rig');
+    const closedNoticeEl = document.getElementById('vr-closed-notice');
+    const stageEl = document.getElementById('spatial-stage');
+    const reticleEl = document.getElementById('vr-reticle');
+    const pointerReadout = document.getElementById('pointer-readout');
+
+    function formatVal(val) {
+      return Number.isInteger(val) ? String(val) : String(Number(val.toFixed(2)));
+    }
+
+    function togglePanel() {
+      state.panelOpen = !state.panelOpen;
+      rigEl.classList.toggle('is-closed', !state.panelOpen);
+      closedNoticeEl.classList.toggle('is-visible', !state.panelOpen);
+      render();
+    }
+
+    function render() {
+      const section = SECTIONS[state.sectionIndex];
+
+      railNav.innerHTML = '';
+      SECTIONS.forEach((sec, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'nav-item' + (idx === state.sectionIndex ? ' is-active' : '');
+        btn.innerHTML = `${sec.icon}<span>${sec.title}</span>`;
+        btn.addEventListener('click', () => {
+          state.sectionIndex = idx;
+          state.pageIndex = 0;
+          state.editingSearch = false;
+          render();
+        });
+        railNav.appendChild(btn);
+      });
+
+      headingEl.textContent = state.editingSearch ? 'Search warehouse' : section.title;
+      captionEl.textContent = state.editingSearch
+        ? 'Point with right hand and pull Right Trigger to type.'
+        : section.caption;
+      statusEl.textContent = state.status;
+
+      rowsEl.style.display = state.editingSearch ? 'none' : 'flex';
+      keyboardEl.classList.toggle('is-visible', state.editingSearch);
+
+      if (state.editingSearch) {
+        kbQueryEl.textContent = state.query.length ? state.query : 'Type to search…';
+        pageNumEl.textContent = 'FILTER';
+        pagePrevEl.disabled = true;
+        pageNextEl.disabled = true;
+        renderKeyboard();
+        return;
+      }
+
+      const pages = Math.max(1, Math.ceil(section.rows.length / ROWS_PER_PAGE));
+      state.pageIndex = Math.max(0, Math.min(state.pageIndex, pages - 1));
+      pageNumEl.textContent = `${state.pageIndex + 1} / ${pages}`;
+      pagePrevEl.disabled = state.pageIndex === 0;
+      pageNextEl.disabled = state.pageIndex >= pages - 1;
+
+      const slice = section.rows.slice(state.pageIndex * ROWS_PER_PAGE, (state.pageIndex + 1) * ROWS_PER_PAGE);
+      rowsEl.innerHTML = '';
+
+      slice.forEach(row => {
+        const card = document.createElement('div');
+        const detailText = typeof row.detail === 'function' ? row.detail() : (row.detail || '');
+        const isInteractive = row.type !== 'locked';
+        card.className = 'vr-row' + (isInteractive ? ' is-interactive' : ' is-locked');
+
+        const textWrap = document.createElement('div');
+        textWrap.className = 'row-text';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'row-title';
+        titleEl.textContent = row.title;
+        textWrap.appendChild(titleEl);
+        if (detailText) {
+          const detEl = document.createElement('div');
+          detEl.className = 'row-detail';
+          detEl.textContent = detailText;
+          textWrap.appendChild(detEl);
+        }
+        card.appendChild(textWrap);
+
+        const ctrl = document.createElement('div');
+        ctrl.className = 'row-control';
+
+        if (row.type === 'toggle') {
+          const on = Boolean(state.settings[row.key]);
+          const lbl = document.createElement('span');
+          lbl.className = 'state-label' + (on ? ' is-on' : '');
+          lbl.textContent = on ? 'ON' : 'OFF';
+          const sw = document.createElement('div');
+          sw.className = 'apple-switch' + (on ? ' is-on' : '');
+          sw.innerHTML = '<div class="apple-switch-thumb"></div>';
+          ctrl.appendChild(lbl);
+          ctrl.appendChild(sw);
+          card.addEventListener('click', () => {
+            state.settings[row.key] = !on;
+            state.status = `${row.title}: ${!on ? 'ON' : 'OFF'}`;
+            render();
+          });
+        } else if (row.type === 'locked') {
+          const lbl = document.createElement('span');
+          lbl.className = 'state-label';
+          lbl.textContent = 'Locked';
+          ctrl.appendChild(lbl);
+          card.addEventListener('click', () => {
+            state.status = row.detail || 'Not available on this game assembly.';
+            render();
+          });
+        } else if (row.type === 'slider') {
+          const wrap = document.createElement('div');
+          wrap.className = 'slider-wrap';
+          const minus = document.createElement('button');
+          minus.type = 'button';
+          minus.className = 'step-btn';
+          minus.textContent = '−';
+          minus.setAttribute('aria-label', `Decrease ${row.title}`);
+          const range = document.createElement('input');
+          range.type = 'range';
+          range.className = 'range-track';
+          range.min = row.min;
+          range.max = row.max;
+          range.step = row.step;
+          range.value = state.settings[row.key];
+          range.setAttribute('aria-label', row.title);
+          const plus = document.createElement('button');
+          plus.type = 'button';
+          plus.className = 'step-btn';
+          plus.textContent = '+';
+          plus.setAttribute('aria-label', `Increase ${row.title}`);
+          const valLbl = document.createElement('span');
+          valLbl.className = 'state-label is-on';
+          valLbl.textContent = formatVal(state.settings[row.key]);
+
+          const applyVal = (next) => {
+            const clamped = Math.max(row.min, Math.min(row.max, Math.round(next / row.step) * row.step));
+            state.settings[row.key] = Number(clamped.toFixed(2));
+            valLbl.textContent = formatVal(state.settings[row.key]);
+            range.value = state.settings[row.key];
+            state.status = `${row.title}: ${valLbl.textContent}`;
+            statusEl.textContent = state.status;
+          };
+
+          minus.addEventListener('click', (e) => { e.stopPropagation(); applyVal(state.settings[row.key] - row.step); });
+          plus.addEventListener('click', (e) => { e.stopPropagation(); applyVal(state.settings[row.key] + row.step); });
+          range.addEventListener('input', (e) => { applyVal(Number(e.target.value)); });
+
+          wrap.appendChild(minus);
+          wrap.appendChild(range);
+          wrap.appendChild(plus);
+          ctrl.appendChild(wrap);
+          ctrl.appendChild(valLbl);
+        } else if (row.type === 'search') {
+          const pill = document.createElement('span');
+          pill.className = 'action-pill';
+          pill.textContent = 'Search ›';
+          ctrl.appendChild(pill);
+          card.addEventListener('click', () => {
+            state.editingSearch = true;
+            render();
+          });
+        } else {
+          const pill = document.createElement('span');
+          pill.className = 'action-pill';
+          pill.textContent = 'Open ›';
+          ctrl.appendChild(pill);
+          card.addEventListener('click', () => {
+            state.status = row.run();
+            render();
+          });
+        }
+
+        card.appendChild(ctrl);
+        rowsEl.appendChild(card);
+      });
+    }
+
+    function renderKeyboard() {
+      kbRowsEl.innerHTML = '';
+      KEYBOARD_ROWS.forEach(keys => {
+        const row = document.createElement('div');
+        row.className = 'kb-row';
+        keys.forEach(k => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'kb-key' + (k === 'Search' ? ' is-primary' : '');
+          btn.textContent = k;
+          btn.addEventListener('click', () => {
+            if (k === 'Cancel') {
+              state.editingSearch = false;
+            } else if (k === 'Search') {
+              state.crateIndex = 0;
+              const count = filteredCrates().length;
+              state.status = `Warehouse search: ${count} match(es).`;
+              state.editingSearch = false;
+            } else if (k === 'Delete') {
+              state.query = state.query.slice(0, -1);
+            } else if (k === 'Clear') {
+              state.query = '';
+            } else if (k === 'Space') {
+              if (state.query.length < 48) state.query += ' ';
+            } else if (state.query.length < 48) {
+              state.query += k;
+            }
+            render();
+          });
+          row.appendChild(btn);
+        });
+        kbRowsEl.appendChild(row);
+      });
+    }
+
+    pagePrevEl.addEventListener('click', () => {
+      if (state.pageIndex > 0) {
+        state.pageIndex--;
+        render();
+      }
+    });
+    pageNextEl.addEventListener('click', () => {
+      state.pageIndex++;
+      render();
+    });
+    document.getElementById('toggle-panel-btn').addEventListener('click', togglePanel);
+
+    stageEl.addEventListener('mousemove', (e) => {
+      const rect = stageEl.getBoundingClientRect();
+      reticleEl.style.left = `${e.clientX - rect.left}px`;
+      reticleEl.style.top = `${e.clientY - rect.top}px`;
+      reticleEl.classList.add('is-active');
+    });
+    stageEl.addEventListener('mouseleave', () => {
+      reticleEl.classList.remove('is-active');
+    });
+    stageEl.addEventListener('mousedown', () => {
+      reticleEl.classList.add('is-trigger');
+      pointerReadout.textContent = 'Right Trigger pressed';
+    });
+    window.addEventListener('mouseup', () => {
+      reticleEl.classList.remove('is-trigger');
+      pointerReadout.textContent = 'Pointer active';
+    });
+
+    render();
+  </script>
 </body>
 </html>
