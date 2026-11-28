@@ -1,13 +1,13 @@
 # Avelis Hub BL
 
-Avelis Hub BL is an Android-only **BONELAB code mod** for standalone Meta Quest. It adds a page to BoneLib’s existing Bone Menu and an optional black-and-white, world-space panel with Lucide icons. Nothing runs outside the game at play time. Fusion is not required; the hub pauses gameplay overrides when it detects a Fusion session.
+Avelis Hub BL is an Android-only **BONELAB code mod** for standalone Meta Quest. It adds a page to BoneLib’s existing Bone Menu and an optional world-space panel with rounded graphite controls, a translucent rim where supported, and monochrome Lucide icons. Nothing runs outside the game at play time. Fusion is not required; the hub pauses gameplay overrides when it detects a Fusion session.
 
 ## Install on Quest
 
 1. Back up your BONELAB data and OBBs before patching. Patch and launch BONELAB with **LemonLoader 0.6.5.1**, grant its requested file permissions, and let the first run finish.
 2. Install a Quest build of **BoneLib** that already works with your game patch and loader. The supplied compile reference is BoneLib **3.2.2**; its Thunderstore manifest declares the upstream MelonLoader 0.6.6 package, not an on-device LemonLoader compatibility guarantee. Confirm Bone Menu opens with your Quest setup before adding the hub.
 3. With BONELAB closed, put **only** `AvelisHubBL.dll` in the existing `/sdcard/MelonLoader/<package name>/Mods/` folder. Use the package folder created by LemonLoader. Do not put reference DLLs from this repository in `Mods`.
-4. Start BONELAB and enter a single-player scene. Open **Bone Menu → Avelis Hub BL**, or press **X + Y** together on the left controller. Aim with the right controller and press **A** to select. X + Y closes the panel.
+4. Start BONELAB and enter a single-player scene. Open **Bone Menu → Avelis Hub BL**, or press **X + Y** together on the left controller. Once the floating panel settles, aim with the right controller and press **A** to select. X + Y closes the panel. If another mod also uses X + Y, use **Toggle VR panel** under Avelis’s Bone Menu settings instead.
 
 ## Controls
 
@@ -46,14 +46,16 @@ The output is `AvelisHubBL/bin/Release/net8.0/publish/AvelisHubBL.dll`. `bash sc
 - **Not device-tested.** The attached reference bundle did not include `Il2CppSLZ.Marrow.dll`, `Assembly-CSharp.dll`, a BONELAB patch identifier, or Quest runtime logs. The hub checks game API signatures at startup and locks unsupported controls instead of substituting guessed calls. Successful compilation does not verify Quest runtime compatibility.
 - **No fall damage** is not implemented as a separate toggle: no fall-only damage hook was verified. The game’s invincibility mode is separate and may not prevent scripted deaths. Rapid fire preserves the gun’s supported firing mode; bolt-action and custom systems may ignore the timing override. NPC behavior control is limited to freeze and unfreeze.
 - **Hub missing in Bone Menu:** Check that BoneLib and Bone Menu work without Avelis. Check the loader’s `Latest.log` for `Avelis Hub BL` and any loader or assembly errors. Remove older copies of the hub from `Mods`.
+- **Floating panel fails to open:** Confirm `Latest.log` reports Avelis Hub BL 0.2.2. Look for the last `VR panel:` startup message or a `VR panel failed` error. A managed panel failure leaves Bone Menu available for that session. If BONELAB exits outright, collect the Quest crash buffer with `adb logcat -b crash -d` before relaunching; `Latest.log` may not include a native crash stack.
 - **Control locked:** Read the startup capability line in `Latest.log`. Match BoneLib and generated interop libraries to the installed game patch. If settings prevent loading a scene, close the game and remove only the `[AvelisHubBL]` preference category from `MelonPreferences.cfg` after making a backup.
 - **Search empty:** Refresh the warehouse after loading a level and try the **All** category. The game can reject unavailable assets or crates with spawn policies. The hub does not bypass those policies.
-- **Quest smoke test:** Check both menus and closing/opening with X + Y; test one setting at a time in an offline sandbox; drop a modified weapon and check its original rate; spawn one prop and NPC, freeze/unfreeze and clean them up; turn noclip off in clear space; change scenes with overrides on; save, relaunch, load, then reset defaults. Check `Latest.log` after each failure.
+- **Quest smoke test:** In an offline sandbox, open and close the floating panel with X + Y and from Bone Menu. Confirm that the open press does not also select a control, the right pointer highlights usable controls, and labels stay legible against bright and dark scenes. Check icons (when the sprite shader is supported), slider endpoints, and first-use search. Change scenes and reopen it. Then test one setting at a time; drop a modified weapon and check its original rate; spawn one prop and NPC, freeze/unfreeze and clean them up; turn noclip off in clear space; change scenes with overrides on; save, relaunch, load, then reset defaults. Check `Latest.log` after each failure.
 
 ## Upstream API references
 
 - [LemonLoader 0.6.5.1](https://github.com/LemonLoader/MelonLoader/releases/tag/0.6.5.1): official Android installer bundle and net8 loader/Harmony references. The supplied loader and interop DLLs matched the release bundle byte-for-byte.
 - [BoneLib](https://github.com/yowchap/BoneLib): `Player`, `BoneMenu.Page`, `HelperMethods`, and `Extensions.SetRpm` for rig/controller access, menu controls, load state and gun timing.
 - [BONELAB Fusion](https://github.com/Lakatrazz/BONELAB-Fusion): `LocalAssetSpawner`, `CrateFilterer`, `PooleePatches`, `RigManagerExtensions`, and `NetworkInfo` for async crate lifecycle, pose APIs, and session detection.
+- [FusionGuard Quest 8.6.9](https://old.thunderstore.io/c/bonelab/p/FusionGuardTeam/FusionGuard_Quest/source/) and [LabFusion’s menu entry point](https://github.com/Lakatrazz/BONELAB-Fusion/blob/main/LabFusion/src/Menu/MenuCreator.cs) were reviewed for menu lifetime and input handling. Avelis uses its own cached panel, Bone Menu entry, and short input settle instead of adding either mod as a dependency.
 - [Thunderstore BONELAB](https://thunderstore.io/c/bonelab/): InfiniteAmmo (WeatherElectric), GunTweaker (Adi), HyperJump (Evanaellio), TagtusVR AutoReload and DynamicFlight (Astronoz) were inspected to cross-check game member names and callback signatures.
 - [Lucide](https://github.com/lucide-icons/lucide): SVGs and the upstream [license](AvelisHubBL/Menu/Icons/LICENSE) for the embedded monochrome UI glyphs.
